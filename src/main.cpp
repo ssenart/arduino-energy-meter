@@ -14,7 +14,7 @@
 // ---------------------------
 // -- Simulation mode parameters
 const double VOLTAGE_AMPLITUDE = 325.0; // 230V RMS.
-const double CURRENT_AMPLITUDE = 0.6149; // 0.4348A RMS.
+const double CURRENT_AMPLITUDE = 0.6149; // 0.4348A RMS => Equivalent to 100W.
 
 const double FREQUENCY = 50;
 const double PHASE_ANGLE = 0; //PI / 2;
