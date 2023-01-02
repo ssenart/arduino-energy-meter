@@ -5,7 +5,9 @@
 
 #include "Constants.h"
 
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 
 class SimulatedEnergySource : public virtual IEnergySource
 {

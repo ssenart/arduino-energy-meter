@@ -24,10 +24,8 @@ void testSimulatedEnergySource() {
     TEST_ASSERT_TRUE(simulatedEnergySource.current() != 0.0);
 }
 
-int main( int argc, char **argv) {
-    UNITY_BEGIN();
-
-    RUN_TEST(testSimulatedEnergySource);
-
-    UNITY_END();
+int runUnityTests() {
+  UNITY_BEGIN();
+  RUN_TEST(testSimulatedEnergySource);
+  return UNITY_END();
 }
