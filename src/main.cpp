@@ -58,5 +58,9 @@ void loop() {
   Serial.print(" ");  
   Serial.print(energyMeter.powerFactor());    
   Serial.print(" ");
-  Serial.println(energyMeter.phaseAngle());    
+  Serial.print(energyMeter.phaseAngle());
+  Serial.print(" ");
+  Serial.print(energyMeter.totalElapsed());
+  Serial.print(" ");
+  Serial.println(energyMeter.busyElapsed());    
 }

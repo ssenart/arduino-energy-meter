@@ -4,6 +4,7 @@
 #include "IEnergySource.h"
 
 #include "Common.h"
+#include "ElapsedTime.h"
 
 class EnergyMeter
 {
@@ -41,6 +42,8 @@ public:
         energy_ += activePower_ * (averagingPeriod / SECONDS_PER_HOUR);
         powerFactor_ = activePower_ / apparentPower_;
         phaseAngle_  = acos(powerFactor_) * 180 / PI;
+        totalElapsed_ = sampling.totalElapsed;
+        busyElapsed_ = sampling.busyElapsed;
     }
 
     /* Frequency in Hertz (Hz). */ 
@@ -70,6 +73,12 @@ public:
     /* Phase angle (Phi) in Degree (°). */
     double phaseAngle() { return phaseAngle_; }    
 
+    /* Total elapsed time in Microseconds (us). */
+    double totalElapsed() { return totalElapsed_; } 
+
+    /* Busy elapsed time in Microseconds (us). */
+    double busyElapsed() { return busyElapsed_; }     
+
 private:
 
     struct Sampling
@@ -79,6 +88,8 @@ private:
         double voltageSqrSum;
         double currentSqrSum;
         double instantPowerSum;
+        unsigned long totalElapsed;
+        unsigned long busyElapsed;
     };
 
     double sqr(double val)
@@ -93,6 +104,8 @@ private:
         sampling.voltageSqrSum = 0;
         sampling.currentSqrSum = 0;
         sampling.instantPowerSum = 0;
+        sampling.totalElapsed = 0;
+        sampling.busyElapsed = 0;
 
         auto samplingPeriod = ((double) MICROSECONDS_PER_SECOND) / samplingFrequency_;
 
@@ -104,10 +117,14 @@ private:
 
         while (sampleCount < size) {
 
+            ELAPSED_TIME(sampling.totalElapsed);
+
             auto currentTime = micros();
 
             if (currentTime - previousTime >= samplingPeriod)
             {
+                ELAPSED_TIME(sampling.busyElapsed);
+
                 auto voltage = energySource_.voltage();
                 auto current = energySource_.current();
 
@@ -142,6 +159,8 @@ private:
     double energy_;
     double powerFactor_;
     double phaseAngle_;
+    unsigned long totalElapsed_;
+    unsigned long busyElapsed_;    
 };
 
 #endif // __ENERGYMETER_H__
