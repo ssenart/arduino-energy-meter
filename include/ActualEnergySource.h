@@ -18,12 +18,12 @@ public:
 
     virtual double voltage()
     {
-        return analogRead(A1) * 2 * voltageAmplitude_ / 1024 - voltageAmplitude_;
+        return analogRead(pinVoltage_) * 2 * voltageAmplitude_ / 1024 - voltageAmplitude_;
     }
 
     virtual double current()
     {
-        return analogRead(A2) * 2 * currentAmplitude_ / 1024 - currentAmplitude_;
+        return analogRead(pinCurrent_) * 2 * currentAmplitude_ / 1024 - currentAmplitude_;
     }
 
 private:
