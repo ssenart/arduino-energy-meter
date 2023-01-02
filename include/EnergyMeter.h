@@ -3,9 +3,7 @@
 
 #include "IEnergySource.h"
 
-#include "Constants.h"
-
-#include <Arduino.h>
+#include "Common.h"
 
 class EnergyMeter
 {

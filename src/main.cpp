@@ -1,5 +1,3 @@
-#include <Arduino.h>
-
 #include "SimulatedEnergySource.h"
 #include "ActualEnergySource.h"
 #include "EnergyMeter.h"

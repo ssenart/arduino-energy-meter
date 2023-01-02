@@ -1,14 +1,5 @@
-#include <Arduino.h>
-
 #include "ActualEnergySource.h"
 #include "EnergyMeter.h"
-
-// Uncomment the line below to switch on simulation mode.
-#define SIMULATION
-
-// Reference documentation.
-// See: https://learn.openenergymonitor.org/electricity-monitoring/ac-power-theory/advanced-maths
-// See: https://solarduino.com/how-to-measure-ac-power-with-arduino/
 
 // ---------------------------
 // -- Actual mode parameters

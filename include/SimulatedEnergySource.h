@@ -3,11 +3,7 @@
 
 #include "IEnergySource.h"
 
-#include "Constants.h"
-
-#ifdef ARDUINO
-#include <Arduino.h>
-#endif
+#include "Common.h"
 
 class SimulatedEnergySource : public virtual IEnergySource
 {
