@@ -11,17 +11,18 @@ class EnergyMeter
 
 public:
 
-    EnergyMeter(IEnergySource& energySource, double samplingFrequency, int sampleSize)
+    EnergyMeter(IEnergySource& energySource, float samplingFrequency, int sampleSize)
     : energySource_(energySource), samplingFrequency_(samplingFrequency), sampleSize_(sampleSize),
-    frequency_(0),
-    rmsVoltage_(0),
-    rmsCurrent_(0),
-    apparentPower_(0),
-    activePower_(0),
-    reactivePower_(0),
-    energy_(0),
-    powerFactor_(0),
-    phaseAngle_(0)
+    frequency_(0.0),
+    rmsVoltage_(0.0),
+    currentInputCount_(0),
+    rmsCurrent_(),
+    apparentPower_(),
+    activePower_(),
+    reactivePower_(),
+    energy_(),
+    powerFactor_(),
+    phaseAngle_()
     {
     }
 
@@ -31,53 +32,62 @@ public:
 
         sample(sampling, sampleSize_);
 
-        auto averagingPeriod = (((double) sampleSize_) / samplingFrequency_);
+        auto averagingPeriod = (((float) sampleSize_) / samplingFrequency_);
 
-        frequency_ = ((double) sampling.periodCount) / averagingPeriod;
+        frequency_ = ((float) sampling.periodCount) / averagingPeriod;
         rmsVoltage_ = sqrt(sampling.voltageSqrSum / sampling.size);
-        rmsCurrent_ = sqrt(sampling.currentSqrSum / sampling.size);
-        apparentPower_ = rmsVoltage_ * rmsCurrent_;
-        activePower_ = sampling.instantPowerSum / sampling.size;
-        reactivePower_ = sqrt(sqr(apparentPower_) - sqr(activePower_));
-        energy_ += activePower_ * (averagingPeriod / SECONDS_PER_HOUR);
-        powerFactor_ = activePower_ / apparentPower_;
-        phaseAngle_  = acos(powerFactor_) * 180 / PI;
+
+        currentInputCount_ = sampling.currentInputCount;
+        for (auto inputIndex = 0; inputIndex < sampling.currentInputCount; ++inputIndex)
+        {
+            rmsCurrent_[inputIndex] = sqrt(sampling.currentSqrSum[inputIndex] / sampling.size);
+            apparentPower_[inputIndex] = rmsVoltage_ * rmsCurrent_[inputIndex];
+            activePower_[inputIndex] = sampling.instantPowerSum[inputIndex] / sampling.size;
+            reactivePower_[inputIndex] = sqrt(max(0.0, sqr(apparentPower_[inputIndex]) - sqr(activePower_[inputIndex])));
+            energy_[inputIndex] += activePower_[inputIndex] * (averagingPeriod / SECONDS_PER_HOUR);
+            powerFactor_[inputIndex] = max(-1.0, min(1.0, activePower_[inputIndex] / apparentPower_[inputIndex]));
+            phaseAngle_[inputIndex]  = acos(powerFactor_[inputIndex]) * 180 / PI;
+        }
+
         totalElapsed_ = sampling.totalElapsed;
         busyElapsed_ = sampling.busyElapsed;
     }
 
     /* Frequency in Hertz (Hz). */ 
-    double frequency() { return frequency_; }
+    float frequency() { return frequency_; }
 
     /* RMS voltage in Volt (V). */
-    double rmsVoltage() { return rmsVoltage_; }
+    float rmsVoltage() { return rmsVoltage_; }
+
+    /* Number of current input. */
+    int currentInputCount() { return currentInputCount_; }
 
     /* RMS current in Ampere (A). */
-    double rmsCurrent() { return rmsCurrent_; }
+    float rmsCurrent(int inputIndex) { return rmsCurrent_[inputIndex]; }
 
     /* Apparent power in Volt-Ampere (VA). */
-    double apparentPower() { return apparentPower_; }
+    float apparentPower(int inputIndex) { return apparentPower_[inputIndex]; }
 
     /* Active power in Watt (W). */
-    double activePower() { return activePower_; }
+    float activePower(int inputIndex) { return activePower_[inputIndex]; }
 
     /* Reactive power in Volt-Ampere-Reactive (VAR). */
-    double reactivePower() { return reactivePower_; }
+    float reactivePower(int inputIndex) { return reactivePower_[inputIndex]; }
 
     /* Energy in Watt-Hour (Wh). */
-    double energy() { return energy_; }
+    float energy(int inputIndex) { return energy_[inputIndex]; }
 
     /* Power factor = Cos(Phi). */
-    double powerFactor() { return powerFactor_; }
+    float powerFactor(int inputIndex) { return powerFactor_[inputIndex]; }
 
     /* Phase angle (Phi) in Degree (°). */
-    double phaseAngle() { return phaseAngle_; }    
+    float phaseAngle(int inputIndex) { return phaseAngle_[inputIndex]; }    
 
     /* Total elapsed time in Microseconds (us). */
-    double totalElapsed() { return totalElapsed_; } 
+    float totalElapsed() { return totalElapsed_; } 
 
     /* Busy elapsed time in Microseconds (us). */
-    double busyElapsed() { return busyElapsed_; }     
+    float busyElapsed() { return busyElapsed_; }     
 
 private:
 
@@ -85,14 +95,17 @@ private:
     {
         int size;
         int periodCount;
-        double voltageSqrSum;
-        double currentSqrSum;
-        double instantPowerSum;
+        float voltageSqrSum;
+
+        int currentInputCount;
+        float currentSqrSum[MAX_CURRENT_INPUT];
+        float instantPowerSum[MAX_CURRENT_INPUT];
+
         unsigned long totalElapsed;
         unsigned long busyElapsed;
     };
 
-    double sqr(double val)
+    float sqr(float val)
     {
         return val * val;
     }
@@ -101,13 +114,19 @@ private:
 
         sampling.size = size;
         sampling.periodCount = 0;
-        sampling.voltageSqrSum = 0;
-        sampling.currentSqrSum = 0;
-        sampling.instantPowerSum = 0;
+        sampling.voltageSqrSum = 0.0;
+
+        sampling.currentInputCount = energySource_.currentInputCount();
+        for (auto index = 0; index < sampling.currentInputCount; ++index)
+        {
+            sampling.currentSqrSum[index] = 0.0;
+            sampling.instantPowerSum[index] = 0.0;
+        }
+
         sampling.totalElapsed = 0;
         sampling.busyElapsed = 0;
 
-        auto samplingPeriod = ((double) MICROSECONDS_PER_SECOND) / samplingFrequency_;
+        auto samplingPeriod = ((float) MICROSECONDS_PER_SECOND) / samplingFrequency_;
 
         auto previousVoltage = 0.0;
 
@@ -126,7 +145,6 @@ private:
                 ELAPSED_TIME(sampling.busyElapsed);
 
                 auto voltage = energySource_.voltage();
-                auto current = energySource_.current();
 
                 if (sampleCount > 0 && previousVoltage <= 0.0 && voltage > 0.0)
                 {
@@ -134,31 +152,40 @@ private:
                 }
 
                 sampling.voltageSqrSum += sqr(voltage);
-                sampling.currentSqrSum += sqr(current);
-                sampling.instantPowerSum += voltage * current;
+
+                for (auto index = 0; index < sampling.currentInputCount; ++index)
+                {
+                    auto current = energySource_.current(index);
+
+                    sampling.currentSqrSum[index] += sqr(current);
+                    sampling.instantPowerSum[index] += voltage * current;
+                }
 
                 previousVoltage = voltage;
 
-                previousTime = currentTime;
-
                 ++sampleCount;
+
+                previousTime = currentTime;
             }
         }
     }
 
     IEnergySource& energySource_;
-    double samplingFrequency_;
-    double sampleSize_;
+    float samplingFrequency_;
+    float sampleSize_;
 
-    double frequency_;
-    double rmsVoltage_;
-    double rmsCurrent_;
-    double apparentPower_;
-    double activePower_;
-    double reactivePower_;
-    double energy_;
-    double powerFactor_;
-    double phaseAngle_;
+    float frequency_;
+    float rmsVoltage_;
+
+    int currentInputCount_;
+    float rmsCurrent_[MAX_CURRENT_INPUT];
+    float apparentPower_[MAX_CURRENT_INPUT];
+    float activePower_[MAX_CURRENT_INPUT];
+    float reactivePower_[MAX_CURRENT_INPUT];
+    float energy_[MAX_CURRENT_INPUT];
+    float powerFactor_[MAX_CURRENT_INPUT];
+    float phaseAngle_[MAX_CURRENT_INPUT];
+
     unsigned long totalElapsed_;
     unsigned long busyElapsed_;    
 };

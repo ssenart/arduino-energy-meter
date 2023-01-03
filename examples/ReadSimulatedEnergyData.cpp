@@ -3,18 +3,18 @@
 
 // ---------------------------
 // -- Simulation mode parameters
-const double VOLTAGE_AMPLITUDE = 325.0; // 230V RMS.
-const double CURRENT_AMPLITUDE = 0.6149; // 0.4348A RMS => Equivalent to 100W.
+const float VOLTAGE_AMPLITUDE = 325.0; // 230V RMS.
+const float CURRENT_AMPLITUDE = 0.6149; // 0.4348A RMS => Equivalent to 100W.
 
-const double FREQUENCY = 50;
-const double PHASE_ANGLE = 0; //PI / 2;
+const float FREQUENCY = 50;
+const float PHASE_ANGLE = 0; //PI / 2;
 
 SimulatedEnergySource energySource(VOLTAGE_AMPLITUDE, CURRENT_AMPLITUDE, FREQUENCY, PHASE_ANGLE);
 // ---------------------------
 
 // ---------------------------
 // -- Sampling parameters
-const double SAMPLING_FREQUENCY = 1000;
+const float SAMPLING_FREQUENCY = 1000;
 const int SAMPLE_SIZE = 1000;
 
 EnergyMeter energyMeter(energySource, SAMPLING_FREQUENCY, SAMPLE_SIZE);

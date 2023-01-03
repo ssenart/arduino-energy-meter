@@ -9,34 +9,40 @@ class SimulatedEnergySource : public virtual IEnergySource
 {
 public:
 
-    SimulatedEnergySource(double voltageAmplitude, double currentAmplitude, double frequency, double phaseAngle)
-    : voltageAmplitude_(voltageAmplitude), currentAmplitude_(currentAmplitude), frequency_(frequency), phaseAngle_(phaseAngle)
+    SimulatedEnergySource(float voltageAmplitude, float currentAmplitude, float frequency, float phaseAngle, int currentInputCount)
+    : voltageAmplitude_(voltageAmplitude), currentAmplitude_(currentAmplitude), frequency_(frequency), phaseAngle_(phaseAngle), currentInputCount_(currentInputCount)
     {
     }
 
     virtual ~SimulatedEnergySource() {}
 
-    virtual double voltage()
+    virtual float voltage()
     {
         return voltageAmplitude_ * sin(2 * PI * frequency_ * readTimeInSecs());
     }
 
-    virtual double current()
+    virtual float current(int inputIndex)
     {
         return currentAmplitude_ * sin(2 * PI * frequency_ * readTimeInSecs() + phaseAngle_);
     }
 
-private:
-
-    double readTimeInSecs() {
-
-        return ((double) micros()) / MICROSECONDS_PER_SECOND;
+    virtual int currentInputCount()
+    {
+        return currentInputCount_;
     }
 
-    double voltageAmplitude_;
-    double currentAmplitude_;
-    double frequency_;
-    double phaseAngle_;
+private:
+
+    float readTimeInSecs() {
+
+        return ((float) micros()) / MICROSECONDS_PER_SECOND;
+    }
+
+    float voltageAmplitude_;
+    float currentAmplitude_;
+    float frequency_;
+    float phaseAngle_;
+    int currentInputCount_;
 };
 
 #endif // __SIMULATEDENERGYSOURCE_H__

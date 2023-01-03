@@ -5,6 +5,8 @@ const long MICROSECONDS_PER_SECOND = 1000000;
 
 const int SECONDS_PER_HOUR = 3600;
 
+const int MAX_CURRENT_INPUT = 16;
+
 #ifndef ARDUINO
 #include <math.h>
 #include <chrono>
@@ -22,14 +24,16 @@ int analogRead(uint8_t pin)
 {
     return 0;
 }
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
 class SerialPrintMock
 {
 public:
     void begin(int bauds) { }
     void print(const char* message) { std::cout << message; }
-    void print(double value) { std::cout << value; }
+    void print(float value) { std::cout << value; }
     void println(const char* message) { std::cout << message << std::endl; }
-    void println(double value) { std::cout << value << std::endl; }
+    void println(float value) { std::cout << value << std::endl; }
 };
 SerialPrintMock Serial;
 #else

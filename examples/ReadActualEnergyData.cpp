@@ -3,15 +3,15 @@
 
 // ---------------------------
 // -- Actual mode parameters
-const double VOLTAGE_AMPLITUDE = 325.0; // 230V RMS.
-const double CURRENT_AMPLITUDE = 0.6149; // 0.4348A RMS => Equivalent to 100W.
+const float VOLTAGE_AMPLITUDE = 325.0; // 230V RMS.
+const float CURRENT_AMPLITUDE = 0.6149; // 0.4348A RMS => Equivalent to 100W.
 
 ActualEnergySource energySource(A1, VOLTAGE_AMPLITUDE, A2, CURRENT_AMPLITUDE);
 // ---------------------------
 
 // ---------------------------
 // -- Sampling parameters
-const double SAMPLING_FREQUENCY = 1000;
+const float SAMPLING_FREQUENCY = 1000;
 const int SAMPLE_SIZE = 1000;
 
 EnergyMeter energyMeter(energySource, SAMPLING_FREQUENCY, SAMPLE_SIZE);

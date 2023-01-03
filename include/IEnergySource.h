@@ -7,9 +7,11 @@ public:
 
     virtual ~IEnergySource() {}
 
-    virtual double voltage() = 0;
+    virtual float voltage() = 0;
 
-    virtual double current() = 0;
+    virtual float current(int inputIndex) = 0;
+
+    virtual int currentInputCount() = 0;
 
 protected:
 

@@ -5,38 +5,49 @@
 
 #include "Common.h"
 
+struct MeasureInput
+{
+    int pin;
+    float amplitude;
+};
+
 class ActualEnergySource : public virtual IEnergySource
 {
 public:
 
-    ActualEnergySource(int pinVoltage, double voltageAmplitude, int pinCurrent, double currentAmplitude)
-    : pinVoltage_(pinVoltage), voltageAmplitude_(voltageAmplitude), pinCurrent_(pinCurrent), currentAmplitude_(currentAmplitude)
+    ActualEnergySource(const MeasureInput& voltageInput, const MeasureInput currentInputs[MAX_CURRENT_INPUT], int currentInputCount)
+    : voltageInput_(voltageInput), currentInputs_(), currentInputCount_(currentInputCount)
     {
+        memcpy(currentInputs_, currentInputs, currentInputCount_);
     }
 
     virtual ~ActualEnergySource() {}
 
-    virtual double voltage()
+    virtual float voltage()
     {
-        return analogRead(pinVoltage_) * 2 * voltageAmplitude_ / 1024 - voltageAmplitude_;
+        return analogRead(voltageInput_.pin) * 2 * voltageInput_.amplitude / 1024 - voltageInput_.amplitude;
     }
 
-    virtual double current()
+    virtual float current(int inputIndex)
     {
-        return analogRead(pinCurrent_) * 2 * currentAmplitude_ / 1024 - currentAmplitude_;
+        return analogRead(currentInputs_[inputIndex].pin) * 2 * currentInputs_[inputIndex].amplitude / 1024 - currentInputs_[inputIndex].amplitude;
+    }
+
+    virtual int currentInputCount()
+    {
+        return currentInputCount_;
     }
 
 private:
 
-    double readTimeInSecs() {
+    float readTimeInSecs() {
 
-        return ((double) micros()) / MICROSECONDS_PER_SECOND;
+        return ((float) micros()) / MICROSECONDS_PER_SECOND;
     }
 
-    int pinVoltage_;
-    double voltageAmplitude_;
-    int pinCurrent_;
-    double currentAmplitude_;
+    MeasureInput voltageInput_;
+    MeasureInput currentInputs_[MAX_CURRENT_INPUT];
+    int currentInputCount_;
 };
 
 #endif // __ACTUALENERGYSOURCE_H__
