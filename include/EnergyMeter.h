@@ -11,8 +11,8 @@ class EnergyMeter
 
 public:
 
-    EnergyMeter(IEnergySource& energySource, float samplingFrequency, int sampleSize)
-    : energySource_(energySource), samplingFrequency_(samplingFrequency), sampleSize_(sampleSize),
+    EnergyMeter(IEnergySource& energySource, float samplingFrequency, unsigned long samplingDurationInMs)
+    : energySource_(energySource), samplingFrequency_(samplingFrequency), samplingDurationInMs_(samplingDurationInMs),
     frequency_(0.0),
     rmsVoltage_(0.0),
     currentInputCount_(0),
@@ -30,21 +30,21 @@ public:
     {
         Sampling sampling;
 
-        sample(sampling, sampleSize_);
+        sample(sampling, samplingDurationInMs_);
 
-        auto averagingPeriod = (((float) sampleSize_) / samplingFrequency_);
+        sampleCount_ = sampling.sampleCount;
 
-        frequency_ = ((float) sampling.periodCount) / averagingPeriod;
-        rmsVoltage_ = sqrt(sampling.voltageSqrSum / sampling.size);
+        frequency_ = ((float) sampling.periodCount) / samplingDurationInMs_ * MILLISECONDS_PER_SECOND;
+        rmsVoltage_ = sqrt(sampling.voltageSqrSum / sampling.sampleCount);
 
         currentInputCount_ = sampling.currentInputCount;
         for (auto inputIndex = 0; inputIndex < sampling.currentInputCount; ++inputIndex)
         {
-            rmsCurrent_[inputIndex] = sqrt(sampling.currentSqrSum[inputIndex] / sampling.size);
+            rmsCurrent_[inputIndex] = sqrt(sampling.currentSqrSum[inputIndex] / sampling.sampleCount);
             apparentPower_[inputIndex] = rmsVoltage_ * rmsCurrent_[inputIndex];
-            activePower_[inputIndex] = sampling.instantPowerSum[inputIndex] / sampling.size;
+            activePower_[inputIndex] = sampling.instantPowerSum[inputIndex] / sampling.sampleCount;
             reactivePower_[inputIndex] = sqrt(max(0.0, sqr(apparentPower_[inputIndex]) - sqr(activePower_[inputIndex])));
-            energy_[inputIndex] += activePower_[inputIndex] * (averagingPeriod / SECONDS_PER_HOUR);
+            energy_[inputIndex] += activePower_[inputIndex] * (((float) samplingDurationInMs_) / MILLISECONDS_PER_HOUR);
             powerFactor_[inputIndex] = max(-1.0, min(1.0, activePower_[inputIndex] / apparentPower_[inputIndex]));
             phaseAngle_[inputIndex]  = acos(powerFactor_[inputIndex]) * 180 / PI;
         }
@@ -52,6 +52,9 @@ public:
         totalElapsed_ = sampling.totalElapsed;
         busyElapsed_ = sampling.busyElapsed;
     }
+
+    /* Number of samples captured during sampling. */
+    unsigned long sampleCount() { return sampleCount_; }
 
     /* Frequency in Hertz (Hz). */ 
     float frequency() { return frequency_; }
@@ -93,8 +96,8 @@ private:
 
     struct Sampling
     {
-        int size;
-        int periodCount;
+        unsigned long sampleCount;
+        unsigned long periodCount;
         float voltageSqrSum;
 
         int currentInputCount;
@@ -110,9 +113,9 @@ private:
         return val * val;
     }
 
-    void sample(Sampling& sampling, int size) {
+    void sample(Sampling& sampling, unsigned long samplingDurationInMs) {
 
-        sampling.size = size;
+        sampling.sampleCount = 0;
         sampling.periodCount = 0;
         sampling.voltageSqrSum = 0.0;
 
@@ -132,21 +135,21 @@ private:
 
         unsigned long previousTime = 0;
 
-        auto sampleCount = 0;
+        auto stopTime = micros() + samplingDurationInMs * MICROSECONDS_PER_MILLISECOND;
 
-        while (sampleCount < size) {
+        auto now = micros();
+
+        while (now < stopTime) {
 
             ELAPSED_TIME(sampling.totalElapsed);
 
-            auto currentTime = micros();
-
-            if (currentTime - previousTime >= samplingPeriod)
+            if (now - previousTime >= samplingPeriod)
             {
                 ELAPSED_TIME(sampling.busyElapsed);
 
                 auto voltage = energySource_.voltage();
 
-                if (sampleCount > 0 && previousVoltage <= 0.0 && voltage > 0.0)
+                if (sampling.sampleCount > 0 && previousVoltage <= 0.0 && voltage > 0.0)
                 {
                     ++sampling.periodCount;
                 }
@@ -163,16 +166,20 @@ private:
 
                 previousVoltage = voltage;
 
-                ++sampleCount;
+                ++sampling.sampleCount;
 
-                previousTime = currentTime;
+                previousTime = now;
             }
+
+            now = micros();
         }
     }
 
     IEnergySource& energySource_;
     float samplingFrequency_;
-    float sampleSize_;
+    unsigned long samplingDurationInMs_;
+
+    unsigned long sampleCount_;
 
     float frequency_;
     float rmsVoltage_;

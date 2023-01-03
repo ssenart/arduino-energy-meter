@@ -18,7 +18,7 @@ const float FREQUENCY = 50;
 const float PHASE_ANGLE = 0; //PI / 2;
 
 #ifdef SIMULATION
-SimulatedEnergySource energySource(VOLTAGE_AMPLITUDE, CURRENT_AMPLITUDE, FREQUENCY, PHASE_ANGLE, 2);
+SimulatedEnergySource energySource(VOLTAGE_AMPLITUDE, CURRENT_AMPLITUDE, FREQUENCY, PHASE_ANGLE, 10);
 #else
 ActualEnergySource energySource(A1, VOLTAGE_AMPLITUDE, A2, CURRENT_AMPLITUDE);
 #endif
@@ -27,9 +27,9 @@ ActualEnergySource energySource(A1, VOLTAGE_AMPLITUDE, A2, CURRENT_AMPLITUDE);
 // ---------------------------
 // -- Sampling parameters
 const float SAMPLING_FREQUENCY = 1000;
-const int SAMPLE_SIZE = 1000;
+const unsigned long SAMPLING_DURATION_MS = 1000;
 
-EnergyMeter energyMeter(energySource, SAMPLING_FREQUENCY, SAMPLE_SIZE);
+EnergyMeter energyMeter(energySource, SAMPLING_FREQUENCY, SAMPLING_DURATION_MS);
 // ---------------------------
 
 // ---------------------------
@@ -42,6 +42,8 @@ void loop() {
 
   energyMeter.update();
 
+  Serial.print(energyMeter.sampleCount());
+  Serial.print(" ");
   Serial.print(energyMeter.frequency());
   Serial.print(" ");
   Serial.println(energyMeter.rmsVoltage());

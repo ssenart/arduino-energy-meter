@@ -1,9 +1,15 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-const long MICROSECONDS_PER_SECOND = 1000000;
+const unsigned long MICROSECONDS_PER_SECOND = 1000000;
 
-const int SECONDS_PER_HOUR = 3600;
+const unsigned long MICROSECONDS_PER_MILLISECOND = 1000;
+
+const unsigned long MILLISECONDS_PER_SECOND = 1000;
+
+const unsigned long MILLISECONDS_PER_HOUR = 3600000;
+
+const unsigned long SECONDS_PER_HOUR = 3600;
 
 const int MAX_CURRENT_INPUT = 16;
 

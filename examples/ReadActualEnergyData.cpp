@@ -12,9 +12,9 @@ ActualEnergySource energySource(A1, VOLTAGE_AMPLITUDE, A2, CURRENT_AMPLITUDE);
 // ---------------------------
 // -- Sampling parameters
 const float SAMPLING_FREQUENCY = 1000;
-const int SAMPLE_SIZE = 1000;
+const unsigned long SAMPLING_DURATION_MS = 1000;
 
-EnergyMeter energyMeter(energySource, SAMPLING_FREQUENCY, SAMPLE_SIZE);
+EnergyMeter energyMeter(energySource, SAMPLING_FREQUENCY, SAMPLING_DURATION_MS);
 // ---------------------------
 
 // ---------------------------
