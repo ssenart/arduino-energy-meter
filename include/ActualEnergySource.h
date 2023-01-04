@@ -5,10 +5,18 @@
 
 #include "Common.h"
 
+#include "EnergySample.h"
+
 struct MeasureInput
 {
-    int pin;
-    float amplitude;
+    MeasureInput() {}
+
+    MeasureInput(int pin, float amplitude)
+    : pin_(pin), amplitude_(amplitude)
+    {}
+
+    int pin_;
+    float amplitude_;
 };
 
 class ActualEnergySource : public virtual IEnergySource
@@ -23,19 +31,21 @@ public:
 
     virtual ~ActualEnergySource() {}
 
-    virtual float voltage()
-    {
-        return analogRead(voltageInput_.pin) * 2 * voltageInput_.amplitude / 1024 - voltageInput_.amplitude;
-    }
-
-    virtual float current(int inputIndex)
-    {
-        return analogRead(currentInputs_[inputIndex].pin) * 2 * currentInputs_[inputIndex].amplitude / 1024 - currentInputs_[inputIndex].amplitude;
-    }
-
     virtual int currentInputCount()
     {
         return currentInputCount_;
+    }
+
+    virtual void capture(EnergySample& energySample)
+    {
+        energySample.currentInputCount_ = currentInputCount_;
+        energySample.voltageInputValue_ = analogRead(voltageInput_.pin_);
+        for (auto inputIndex = 0; inputIndex < currentInputCount_; ++inputIndex)
+        {
+            energySample.currentInputValues_[inputIndex] = analogRead(currentInputs_[inputIndex].pin_);
+            energySample.currentAmplitudes_[inputIndex] = currentInputs_[inputIndex].amplitude_;
+        }
+        energySample.voltageAmplitude_ = voltageInput_.amplitude_;
     }
 
 private:

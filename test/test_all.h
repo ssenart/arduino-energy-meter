@@ -20,8 +20,12 @@ void testSimulatedEnergySource() {
 
     SimulatedEnergySource simulatedEnergySource(VOLTAGE_AMPLITUDE, CURRENT_AMPLITUDE, FREQUENCY, PHASE_ANGLE, 1);
 
-    TEST_ASSERT_TRUE(simulatedEnergySource.voltage() != 0.0);
-    TEST_ASSERT_TRUE(simulatedEnergySource.current(0) != 0.0);
+    EnergySample energySample;
+
+    simulatedEnergySource.capture(energySample);
+
+    TEST_ASSERT_TRUE(energySample.voltage() != 0.0);
+    TEST_ASSERT_TRUE(energySample.current(0) != 0.0);
 }
 
 int runUnityTests() {

@@ -20,7 +20,8 @@ const float PHASE_ANGLE = 0; //PI / 2;
 #ifdef SIMULATION
 SimulatedEnergySource energySource(VOLTAGE_AMPLITUDE, CURRENT_AMPLITUDE, FREQUENCY, PHASE_ANGLE, 10);
 #else
-ActualEnergySource energySource(A1, VOLTAGE_AMPLITUDE, A2, CURRENT_AMPLITUDE);
+MeasureInput currentInputs[MAX_CURRENT_INPUT] = { MeasureInput(A2, CURRENT_AMPLITUDE) };
+ActualEnergySource energySource(MeasureInput(A1, VOLTAGE_AMPLITUDE), currentInputs, 1);
 #endif
 // ---------------------------
 

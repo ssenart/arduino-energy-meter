@@ -5,6 +5,7 @@
 
 #include "Common.h"
 #include "ElapsedTime.h"
+#include "EnergySample.h"
 
 class EnergyMeter
 {
@@ -40,13 +41,13 @@ public:
         currentInputCount_ = sampling.currentInputCount;
         for (auto inputIndex = 0; inputIndex < sampling.currentInputCount; ++inputIndex)
         {
-            rmsCurrent_[inputIndex] = sqrt(sampling.currentSqrSum[inputIndex] / sampling.sampleCount);
+            rmsCurrent_[inputIndex] = sqrtf(sampling.currentSqrSum[inputIndex] / sampling.sampleCount);
             apparentPower_[inputIndex] = rmsVoltage_ * rmsCurrent_[inputIndex];
             activePower_[inputIndex] = sampling.instantPowerSum[inputIndex] / sampling.sampleCount;
-            reactivePower_[inputIndex] = sqrt(max(0.0, sqr(apparentPower_[inputIndex]) - sqr(activePower_[inputIndex])));
+            reactivePower_[inputIndex] = sqrtf(max(0.0, sqr(apparentPower_[inputIndex]) - sqr(activePower_[inputIndex])));
             energy_[inputIndex] += activePower_[inputIndex] * (((float) samplingDurationInMs_) / MILLISECONDS_PER_HOUR);
             powerFactor_[inputIndex] = max(-1.0, min(1.0, activePower_[inputIndex] / apparentPower_[inputIndex]));
-            phaseAngle_[inputIndex]  = acos(powerFactor_[inputIndex]) * 180 / PI;
+            phaseAngle_[inputIndex]  = acosf(powerFactor_[inputIndex]) * 180 / PI;
         }
 
         totalElapsed_ = sampling.totalElapsed;
@@ -147,7 +148,11 @@ private:
             {
                 ELAPSED_TIME(sampling.busyElapsed);
 
-                auto voltage = energySource_.voltage();
+                EnergySample energySample;
+
+                energySource_.capture(energySample);
+
+                auto voltage = energySample.voltage();
 
                 if (sampling.sampleCount > 0 && previousVoltage <= 0.0 && voltage > 0.0)
                 {
@@ -158,7 +163,7 @@ private:
 
                 for (auto index = 0; index < sampling.currentInputCount; ++index)
                 {
-                    auto current = energySource_.current(index);
+                    auto current = energySample.current(index);
 
                     sampling.currentSqrSum[index] += sqr(current);
                     sampling.instantPowerSum[index] += voltage * current;

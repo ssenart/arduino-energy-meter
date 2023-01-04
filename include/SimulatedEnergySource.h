@@ -5,6 +5,10 @@
 
 #include "Common.h"
 
+#include "EnergySample.h"
+
+#include <math.h>
+
 class SimulatedEnergySource : public virtual IEnergySource
 {
 public:
@@ -16,19 +20,21 @@ public:
 
     virtual ~SimulatedEnergySource() {}
 
-    virtual float voltage()
-    {
-        return voltageAmplitude_ * sin(2 * PI * frequency_ * readTimeInSecs());
-    }
-
-    virtual float current(int inputIndex)
-    {
-        return currentAmplitude_ * sin(2 * PI * frequency_ * readTimeInSecs() + phaseAngle_);
-    }
-
     virtual int currentInputCount()
     {
         return currentInputCount_;
+    }
+
+    virtual void capture(EnergySample& energySample)
+    {
+        energySample.currentInputCount_ = currentInputCount_;
+        energySample.voltageInputValue_ = round(sinf(2 * PI * frequency_ * readTimeInSecs()) * 512 + 512);
+        for (auto inputIndex = 0; inputIndex < currentInputCount_; ++inputIndex)
+        {
+            energySample.currentInputValues_[inputIndex] = round(sinf(2 * PI * frequency_ * readTimeInSecs() + phaseAngle_) * 512 + 512);
+            energySample.currentAmplitudes_[inputIndex] = currentAmplitude_;
+        }
+        energySample.voltageAmplitude_ = voltageAmplitude_;
     }
 
 private:
