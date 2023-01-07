@@ -13,12 +13,12 @@ public:
 
     float voltage()
     {
-        return voltageInputValue_ * 2 * voltageAmplitude_ / 1024 - voltageAmplitude_;
+        return ((float) voltageInputValue_) / adcMaximumValue_ - 0.5;
     }
 
     float current(int inputIndex)
     {
-        return currentInputValues_[inputIndex] * 2 * currentAmplitudes_[inputIndex] / 1024 - currentAmplitudes_[inputIndex];
+        return ((float) currentInputValues_[inputIndex]) / adcMaximumValue_ - 0.5;
     }
 
     int currentInputCount() 
@@ -28,12 +28,10 @@ public:
 
 private:
 
+    int adcMaximumValue_;
     int voltageInputValue_;
-    float voltageAmplitude_;
-
     int currentInputCount_;
     int currentInputValues_[MAX_CURRENT_INPUT];
-    float currentAmplitudes_[MAX_CURRENT_INPUT];
 
     friend class ActualEnergySource;
     friend class SimulatedEnergySource;

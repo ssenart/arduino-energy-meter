@@ -46,4 +46,9 @@ SerialPrintMock Serial;
 #include <Arduino.h>
 #endif
 
+float sqr(float value)
+{
+    return value * value;
+}
+
 #endif // __COMMON_H__

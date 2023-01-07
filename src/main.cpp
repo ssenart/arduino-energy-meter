@@ -10,18 +10,27 @@
 // See: https://solarduino.com/how-to-measure-ac-power-with-arduino/
 
 // ---------------------------
-// -- Simulation mode parameters
-const float VOLTAGE_AMPLITUDE = 325.0; // 230V RMS.
-const float CURRENT_AMPLITUDE = 0.6149; // 0.4348A RMS => Equivalent to 100W.
+// -- Calibration parameters
+const float SUPPLY_VOLTAGE = 5.0; // Volts.
+const float ADC_RESOLUTION = 10; // Bits
+const float CALIBRATION_VOLTAGE_MULTIPLIER = 130.0; // 130 * 2.5V = 325V (230V RMS)
+const float CALIBRATION_CURRENT_MULTIPLIER = 0.24596; // 0.24596 * 2.5V = 0.6149A (0.4348A RMS) => Equivalent to 100W.
+const float CALIBRATION_PHASE_SHIFT = 1.5; // Coefficient.
 
+// ---------------------------
+// -- Simulation mode parameters
 const float FREQUENCY = 50;
 const float PHASE_ANGLE = 0; //PI / 2;
 
 #ifdef SIMULATION
-SimulatedEnergySource energySource(VOLTAGE_AMPLITUDE, CURRENT_AMPLITUDE, FREQUENCY, PHASE_ANGLE, 10);
+SimulatedEnergySource energySource(ADC_RESOLUTION, FREQUENCY, PHASE_ANGLE, 10);
 #else
-MeasureInput currentInputs[MAX_CURRENT_INPUT] = { MeasureInput(A2, CURRENT_AMPLITUDE) };
-ActualEnergySource energySource(MeasureInput(A1, VOLTAGE_AMPLITUDE), currentInputs, 1);
+int currentInputPins[MAX_CURRENT_INPUT] = {
+   A2
+};
+ActualEnergySource energySource(
+  ADC_RESOLUTION,
+  A1, (int[]) { A2 }, 1);
 #endif
 // ---------------------------
 
@@ -30,7 +39,14 @@ ActualEnergySource energySource(MeasureInput(A1, VOLTAGE_AMPLITUDE), currentInpu
 const float SAMPLING_FREQUENCY = 1000;
 const unsigned long SAMPLING_DURATION_MS = 1000;
 
-EnergyMeter energyMeter(energySource, SAMPLING_FREQUENCY, SAMPLING_DURATION_MS);
+EnergyMeter energyMeter(energySource,
+                        SUPPLY_VOLTAGE,
+                        SAMPLING_FREQUENCY,
+                        SAMPLING_DURATION_MS,
+                        CALIBRATION_VOLTAGE_MULTIPLIER,
+                        CALIBRATION_CURRENT_MULTIPLIER,
+                        CALIBRATION_PHASE_SHIFT
+                       );
 // ---------------------------
 
 // ---------------------------

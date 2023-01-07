@@ -12,8 +12,20 @@ class EnergyMeter
 
 public:
 
-    EnergyMeter(IEnergySource& energySource, float samplingFrequency, unsigned long samplingDurationInMs)
-    : energySource_(energySource), samplingFrequency_(samplingFrequency), samplingDurationInMs_(samplingDurationInMs),
+    EnergyMeter(
+        IEnergySource& energySource,
+        float supplyVoltage,
+        float samplingFrequency,
+        unsigned long samplingDurationInMs,
+        float calibrationVoltageMultiplier,
+        float calibrationCurrentMultiplier,
+        float calibrationPhaseShift)
+    : energySource_(energySource),
+    samplingFrequency_(samplingFrequency),
+    samplingDurationInMs_(samplingDurationInMs),
+    voltageMultiplier_(supplyVoltage * calibrationVoltageMultiplier / 2),
+    currentMultiplier_(supplyVoltage * calibrationCurrentMultiplier / 2),
+    calibrationPhaseShift_(calibrationPhaseShift),
     frequency_(0.0),
     rmsVoltage_(0.0),
     currentInputCount_(0),
@@ -36,14 +48,14 @@ public:
         sampleCount_ = sampling.sampleCount;
 
         frequency_ = ((float) sampling.periodCount) / samplingDurationInMs_ * MILLISECONDS_PER_SECOND;
-        rmsVoltage_ = sqrt(sampling.voltageSqrSum / sampling.sampleCount);
+        rmsVoltage_ = voltageMultiplier_ * sqrt(sampling.voltageSqrSum / sampling.sampleCount);
 
         currentInputCount_ = sampling.currentInputCount;
         for (auto inputIndex = 0; inputIndex < sampling.currentInputCount; ++inputIndex)
         {
-            rmsCurrent_[inputIndex] = sqrtf(sampling.currentSqrSum[inputIndex] / sampling.sampleCount);
+            rmsCurrent_[inputIndex] = currentMultiplier_ * sqrtf(sampling.currentSqrSum[inputIndex] / sampling.sampleCount);
             apparentPower_[inputIndex] = rmsVoltage_ * rmsCurrent_[inputIndex];
-            activePower_[inputIndex] = sampling.instantPowerSum[inputIndex] / sampling.sampleCount;
+            activePower_[inputIndex] = voltageMultiplier_ * currentMultiplier_ * sampling.instantPowerSum[inputIndex] / sampling.sampleCount;
             reactivePower_[inputIndex] = sqrtf(max(0.0, sqr(apparentPower_[inputIndex]) - sqr(activePower_[inputIndex])));
             energy_[inputIndex] += activePower_[inputIndex] * (((float) samplingDurationInMs_) / MILLISECONDS_PER_HOUR);
             powerFactor_[inputIndex] = max(-1.0, min(1.0, activePower_[inputIndex] / apparentPower_[inputIndex]));
@@ -109,11 +121,6 @@ private:
         unsigned long busyElapsed;
     };
 
-    float sqr(float val)
-    {
-        return val * val;
-    }
-
     void sample(Sampling& sampling, unsigned long samplingDurationInMs) {
 
         sampling.sampleCount = 0;
@@ -159,13 +166,13 @@ private:
                     ++sampling.periodCount;
                 }
 
-                sampling.voltageSqrSum += sqr(voltage);
+                sampling.voltageSqrSum += voltage * voltage;
 
                 for (auto index = 0; index < sampling.currentInputCount; ++index)
                 {
                     auto current = energySample.current(index);
 
-                    sampling.currentSqrSum[index] += sqr(current);
+                    sampling.currentSqrSum[index] += current * current;
                     sampling.instantPowerSum[index] += voltage * current;
                 }
 
@@ -183,6 +190,9 @@ private:
     IEnergySource& energySource_;
     float samplingFrequency_;
     unsigned long samplingDurationInMs_;
+    float voltageMultiplier_;
+    float currentMultiplier_;
+    float calibrationPhaseShift_;
 
     unsigned long sampleCount_;
 

@@ -13,8 +13,8 @@ class SimulatedEnergySource : public virtual IEnergySource
 {
 public:
 
-    SimulatedEnergySource(float voltageAmplitude, float currentAmplitude, float frequency, float phaseAngle, int currentInputCount)
-    : voltageAmplitude_(voltageAmplitude), currentAmplitude_(currentAmplitude), frequency_(frequency), phaseAngle_(phaseAngle), currentInputCount_(currentInputCount)
+    SimulatedEnergySource(int adcResolution, float frequency, float phaseAngle, int currentInputCount)
+    : adcMaximumValue_(adcResolution<<1), frequency_(frequency), phaseAngle_(phaseAngle), currentInputCount_(currentInputCount)
     {
     }
 
@@ -27,14 +27,13 @@ public:
 
     virtual void capture(EnergySample& energySample)
     {
+        energySample.adcMaximumValue_ = adcMaximumValue_;
         energySample.currentInputCount_ = currentInputCount_;
-        energySample.voltageInputValue_ = round(sinf(2 * PI * frequency_ * readTimeInSecs()) * 512 + 512);
+        energySample.voltageInputValue_ = round((sinf(2 * PI * frequency_ * readTimeInSecs()) + 0.5) * adcMaximumValue_);
         for (auto inputIndex = 0; inputIndex < currentInputCount_; ++inputIndex)
         {
-            energySample.currentInputValues_[inputIndex] = round(sinf(2 * PI * frequency_ * readTimeInSecs() + phaseAngle_) * 512 + 512);
-            energySample.currentAmplitudes_[inputIndex] = currentAmplitude_;
+            energySample.currentInputValues_[inputIndex] = round((sinf(2 * PI * frequency_ * readTimeInSecs() + phaseAngle_) + 0.5) * adcMaximumValue_);
         }
-        energySample.voltageAmplitude_ = voltageAmplitude_;
     }
 
 private:
@@ -44,8 +43,8 @@ private:
         return ((float) micros()) / MICROSECONDS_PER_SECOND;
     }
 
-    float voltageAmplitude_;
-    float currentAmplitude_;
+    int adcMaximumValue_;
+
     float frequency_;
     float phaseAngle_;
     int currentInputCount_;

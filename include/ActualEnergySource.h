@@ -11,22 +11,22 @@ struct MeasureInput
 {
     MeasureInput() {}
 
-    MeasureInput(int pin, float amplitude)
-    : pin_(pin), amplitude_(amplitude)
+    MeasureInput(int pin, float multiplier)
+    : pin_(pin), multiplier_(multiplier)
     {}
 
     int pin_;
-    float amplitude_;
+    float multiplier_;
 };
 
 class ActualEnergySource : public virtual IEnergySource
 {
 public:
 
-    ActualEnergySource(const MeasureInput& voltageInput, const MeasureInput currentInputs[MAX_CURRENT_INPUT], int currentInputCount)
-    : voltageInput_(voltageInput), currentInputs_(), currentInputCount_(currentInputCount)
+    ActualEnergySource(int adcResolution, int voltageInputPin, int currentInputPins[MAX_CURRENT_INPUT], int currentInputCount)
+    : adcMaximumValue_(adcResolution<<1), voltageInputPin_(voltageInputPin), currentInputPins_(), currentInputCount_(currentInputCount)
     {
-        memcpy(currentInputs_, currentInputs, currentInputCount_);
+        memcpy(currentInputPins_, currentInputPins, currentInputCount_ * sizeof(int));
     }
 
     virtual ~ActualEnergySource() {}
@@ -38,14 +38,13 @@ public:
 
     virtual void capture(EnergySample& energySample)
     {
+        energySample.adcMaximumValue_ = adcMaximumValue_;
         energySample.currentInputCount_ = currentInputCount_;
-        energySample.voltageInputValue_ = analogRead(voltageInput_.pin_);
+        energySample.voltageInputValue_ = analogRead(voltageInputPin_);
         for (auto inputIndex = 0; inputIndex < currentInputCount_; ++inputIndex)
         {
-            energySample.currentInputValues_[inputIndex] = analogRead(currentInputs_[inputIndex].pin_);
-            energySample.currentAmplitudes_[inputIndex] = currentInputs_[inputIndex].amplitude_;
+            energySample.currentInputValues_[inputIndex] = analogRead(currentInputPins_[inputIndex]);
         }
-        energySample.voltageAmplitude_ = voltageInput_.amplitude_;
     }
 
 private:
@@ -55,8 +54,10 @@ private:
         return ((float) micros()) / MICROSECONDS_PER_SECOND;
     }
 
-    MeasureInput voltageInput_;
-    MeasureInput currentInputs_[MAX_CURRENT_INPUT];
+    int adcMaximumValue_;
+
+    int voltageInputPin_;
+    int currentInputPins_[MAX_CURRENT_INPUT];
     int currentInputCount_;
 };
 
