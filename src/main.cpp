@@ -12,7 +12,10 @@
 // ---------------------------
 // -- Board parameters
 const float SUPPLY_VOLTAGE = 5.0; // Volts.
-const float ADC_RESOLUTION = 10; // Bits
+
+#ifndef ADC_RESOLUTION
+const int ADC_RESOLUTION = 10; // Bits
+#endif
 
 // ---------------------------
 // -- Calibration parameters
