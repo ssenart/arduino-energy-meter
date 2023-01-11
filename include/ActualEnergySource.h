@@ -23,8 +23,8 @@ class ActualEnergySource : public virtual IEnergySource
 {
 public:
 
-    ActualEnergySource(int adcResolution, int voltageInputPin, int currentInputPins[MAX_CURRENT_INPUT], int currentInputCount)
-    : adcMaximumValue_(adcResolution<<1), voltageInputPin_(voltageInputPin), currentInputPins_(), currentInputCount_(currentInputCount)
+    ActualEnergySource(int adcResolution, int voltageInputPin, const int currentInputPins[MAX_CURRENT_INPUT], int currentInputCount)
+    : adcMaximumValue_(1<<adcResolution), voltageInputPin_(voltageInputPin), currentInputPins_(), currentInputCount_(currentInputCount)
     {
         memcpy(currentInputPins_, currentInputPins, currentInputCount_ * sizeof(int));
     }

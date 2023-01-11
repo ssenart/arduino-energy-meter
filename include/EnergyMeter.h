@@ -57,6 +57,7 @@ public:
         sample(sampling, samplingDurationInMs_);
 
         sampleCount_ = sampling.sampleCount;
+        periodCount_ = sampling.periodCount;
 
         frequency_ = ((float) sampling.periodCount) / samplingDurationInMs_ * MILLISECONDS_PER_SECOND;
         rmsVoltage_ = voltageMultiplier_ * sqrt(sampling.voltageSqrSum / sampling.sampleCount);
@@ -81,6 +82,9 @@ public:
 
     /* Number of samples captured during sampling. */
     unsigned long sampleCount() { return sampleCount_; }
+
+    /* Number of periods captured during sampling. */
+    unsigned long periodCount() { return periodCount_; }
 
     /* Frequency in Hertz (Hz). */ 
     float frequency() { return frequency_; }
@@ -238,6 +242,7 @@ private:
     int currentInputCount_;
 
     unsigned long sampleCount_;
+    unsigned long periodCount_;
 
     float frequency_;
     float averageVoltage_;

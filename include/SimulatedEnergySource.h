@@ -14,7 +14,7 @@ class SimulatedEnergySource : public virtual IEnergySource
 public:
 
     SimulatedEnergySource(int adcResolution, float frequency, float phaseAngle, int currentInputCount)
-    : adcMaximumValue_(adcResolution<<1), frequency_(frequency), phaseAngle_(phaseAngle), currentInputCount_(currentInputCount)
+    : adcMaximumValue_(1<<adcResolution), frequency_(frequency), phaseAngle_(phaseAngle), currentInputCount_(currentInputCount)
     {
     }
 
